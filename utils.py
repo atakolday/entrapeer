@@ -1,6 +1,5 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from verification_search_handler import VerificationSearchHandler
 
 def evaluate_response(user_query: str, retrieved_response: str, model=ChatOpenAI(model='openai-4o-mini')) -> str:
     """Evaluates if a retrieved response sufficiently answers the user's question."""
