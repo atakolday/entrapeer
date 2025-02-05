@@ -1,7 +1,5 @@
 import os
-# import re
 import getpass
-# import datetime
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -45,6 +43,7 @@ def main(retry=False, user_input=None):
     model = ChatOpenAI(model="gpt-4o-mini")
     if not retry:
         user_input = input(" >> So, what would you like to look up today?  ")
+    
     # Step 1: Query Disambiguation & Refinement
     disambiguator = QueryDisambiguator(model)
     refined_query = disambiguator.resolve_query(user_input)
