@@ -12,12 +12,12 @@ The main workflow is implemented in `main.py`, which coordinates the processing 
 
 ```
 .
-├── main.py                    # Entry point of the application
-├── query_disambiguator.py      # Handles query disambiguation and refinement
+├── main.py                         # Entry point of the application
+├── query_disambiguator.py          # Handles query disambiguation, classification, and refinement
 ├── verification_search_handler.py  # Manages web-based and verification-related searches through Tavily and Google Serper API
-├── financial_query_handler.py  # Handles finance-related queries through Yahoo Finance API
-├── wikipedia_query_handler.py  # Handles query search through Wikipedia API
-├── utils.py                    # Utility functions used throughout the project (expandable)
+├── financial_query_handler.py      # Handles finance-related queries through Yahoo Finance API
+├── wikipedia_query_handler.py      # Handles query search through Wikipedia API
+├── utils.py                        # Utility functions used throughout the project (expandable)
 ```
 
 ## Installation
@@ -103,6 +103,7 @@ Since API kets should not be hardcoded or pushed to version control, users have 
 #### `financial_query_handler.py`
 - Specializes in parsing and processing financial-related queries.
 - Fetches stock data, financial reports, or other related financial information.
+- Generates an LLM-response based on retrieved information from Yahoo Finance.
 
 #### `wikipedia_query_handler.py`
 - Searches Wikipedia for relevant results.
@@ -112,7 +113,7 @@ Since API kets should not be hardcoded or pushed to version control, users have 
 - Contains helper functions used across different modules.
 - Currently, only includes `evaluate_response()` which evaluates the retrieved response based on the user query, focusing on (1) relevance, and (2) completeness.
 
-## Example Query Flow
+## End-to-End Execution Flow
 1. `main.py` receives a query through user input.
 2. The query is passed to `query_disambiguator.py` for refinement and classification.
 3. Based on classification, the query is routed to the appropriate handler:
