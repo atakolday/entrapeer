@@ -58,7 +58,7 @@ def main(retry=False, user_input=None):
     # Step 2: Get initial response (Wikipedia, Yahoo Finance)
     if intent == 'stock':
         # print(" >> Searching Yahoo Finance...")
-        first_tool = FinancialQueryHandler(user_query = refined_query)
+        first_tool = FinancialQueryHandler(user_query=refined_query, model=model)
         first_result = first_tool.analyze_stock(company)
 
         # BREAK: If Yahoo Finance couldn't find the ticker, it returned a tuple, with the second element being its message

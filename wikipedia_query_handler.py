@@ -56,6 +56,7 @@ class WikipediaQueryHandler:
                 response = self.chain.invoke({"question": question, "context": context}).strip()
                 
                 if not response.startswith("The context provided does not mention"):
+                    # print('Response:', response)  # debugging
                     self.url += context.metadata['title'].replace(" ", "_")  # Append page title to Wikipedia URL
                     return response  # Return the first response that includes the query answer
                 

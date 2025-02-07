@@ -26,7 +26,7 @@ class TestFinancialQueryHandler(unittest.TestCase):
             "fiftyTwoWeekLow": 120.0
         }
 
-        handler = FinancialQueryHandler()
+        handler = FinancialQueryHandler(user_query="What is Apple's stock price?")
         stock_data = handler.fetch_stock_data("AAPL")
 
         expected_output = {
@@ -43,7 +43,7 @@ class TestFinancialQueryHandler(unittest.TestCase):
     @patch("financial_query_handler.ChatOpenAI.invoke")
     def test_get_ticker(self, mock_model):
         """Test that get_ticker returns the correct stock ticker."""
-        handler = FinancialQueryHandler()
+        handler = FinancialQueryHandler(user_query="What is Apple's stock price?")
         
         # Case 1: Valid ticker
         mock_model.return_value.content = "AAPL"

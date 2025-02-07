@@ -9,6 +9,7 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # Add the parent directory to sys.path
 sys.path.append(parent_dir)
 
+from langchain_core.documents import Document
 from wikipedia_query_handler import WikipediaQueryHandler
 
 class TestWikipediaQueryHandler(unittest.TestCase):
@@ -36,9 +37,11 @@ class TestWikipediaQueryHandler(unittest.TestCase):
         """Test Wikipedia response generation using LLM."""
         handler = WikipediaQueryHandler(intent="general", company="Apple")
 
-        # Mock Wikipedia and LLM responses
-        mock_search_wikipedia.return_value = iter(["Apple Inc. is a multinational technology company."])
-        
+        # Mock Wikipedia search to return a Document object
+        mock_search_wikipedia.return_value = iter([
+            Document(metadata={"title": "Apple Inc."}, page_content="Apple Inc. is a multinational technology company.")
+        ])
+
         # Ensure mock returns a string, not a MagicMock
         mock_model_invoke.return_value = "Apple Inc. is a major player in the tech industry."
 
