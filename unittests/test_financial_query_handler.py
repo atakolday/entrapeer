@@ -9,8 +9,6 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # Add the parent directory to sys.path
 sys.path.append(parent_dir)
 
-import unittest
-from unittest.mock import patch
 from financial_query_handler import FinancialQueryHandler
 
 class TestFinancialQueryHandler(unittest.TestCase):
