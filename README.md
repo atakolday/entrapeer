@@ -20,6 +20,28 @@ The main workflow is implemented in `main.py`, which coordinates the processing 
 ├── utils.py                        # Utility functions used throughout the project (expandable)
 ```
 
+## End-to-End Execution Flow
+1. `main.py` receives a query through user input.
+2. The query is passed to `query_disambiguator.py` for refinement and classification.
+3. Based on classification, the query is routed to the appropriate handler:
+   - `financial_query_handler.py` for finance-related queries through Yahoo Finance.
+   - `wikipedia_query_handler.py` for all other queries.
+4. The appropriate handler processes the query and returns the first result.
+   - If the Yahoo Finance API couldn't find a ticker associated with the company name in the query, the LLM returns the reason for why that company does not have a ticker (e.g. OpenAI is not a publicly traded company).
+   - The application asks the user if they wish to search for something else (`[y/n]`):
+      - If the user inputs `yes` or `y`, `main()` is called again, and the application returns to **Step 1**.
+      - Otherwise, the system exits with a goodbye message.
+5. The returned result is evaluated for relevance and completeness.
+   - If the first result from Yahoo Finance or Wikipedia is sufficient, `verification_search_handler.py` verifies the information through a web search.
+   - The application returns the verified result.
+5. If the first result failed the relevance or completeness check, the query is given to `verification_search_handler.py` for a real-time web search using Tavily and Google Serper.
+   - The result is verified internally by cross-checking raw results from `Tavily` and `Google Serper`.
+   - The verified result is evaluated for relevance and completeness.
+   - If the result is sufficient, the application returns the verified result.
+   - If the result is insufficient or incomplete, the application returns to Step 1, and asks the user for further details with `main(retry=True, user_input=refined_input)`:
+      - At this point, the application takes the already refined input as the raw user input and asks for any additional details from the user.
+      - The query is **not** mapped to a predetermined value this time, it is passed along as `{company_name} {details} {time_reference}`.
+
 ## Installation
 
 ### Prerequisites
@@ -110,25 +132,10 @@ Since API kets should not be hardcoded or pushed to version control, users have 
 - Extracts useful information from Wikipedia pages.
 
 #### `utils.py`
-- Contains helper functions used across different modules.
-- Currently, only includes `evaluate_response()` which evaluates the retrieved response based on the user query, focusing on (1) relevance, and (2) completeness.
-
-## End-to-End Execution Flow
-1. `main.py` receives a query through user input.
-2. The query is passed to `query_disambiguator.py` for refinement and classification.
-3. Based on classification, the query is routed to the appropriate handler:
-   - `financial_query_handler.py` for finance-related queries through Yahoo Finance.
-   - `wikipedia_query_handler.py` for all other queries.
-4. The appropriate handler processes the query and returns the first result.
-5. The returned result is evaluated for relevance and completeness.
-   - If the first result from Yahoo Finance or Wikipedia is sufficient, `verification_search_handler.py` verifies the information through a web search.
-   - The application returns the verified result.
-5. If the first result failed the relevance or completeness check, the query is given to `verification_search_handler.py` for a real-time web search using Tavily and Google Serper.
-   - the result is evaluated for relevance and completeness.
-   - if the result is sufficient, the application returns the verified result.
-   - if the result is insufficient or incomplete, the application returns to step 2, and asks the user for further details with `main(retry=True, user_input=refined_input)`
-5. `main.py` formats and outputs the verified result.
-
+- `evaluate_response`: Evaluates the retrieved response based on the user query, focusing on (1) relevance, and (2) completeness.
+- `hyperlink`: Creates hyperlinks with source URL, using ASCII escape sequences for the sources listed at the end of the system response.
+- `extract_source_names`: Extracts domain names from URLs and returns a list of (formatted_source, url) tuples.
+- `format_sources`: If there is a ticker, returns the hyperlinked Yahoo Finance URL. Otherwise, finds a list of source URLs inside parentheses at the end of the given text and replaces them with hyperlinked, formatted source names.
 
 ## License
 This project is licensed under the MIT License. See `LICENSE` for more details.
