@@ -3,8 +3,7 @@ from langchain_community.tools import TavilySearchResults
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.utilities import GoogleSerperAPIWrapper
 
-import re
-import tldextract
+from utils import format_sources
 
 class VerificationSearchHandler:
     """A combined search handler that integrates Tavily and Serper for robust verification."""
@@ -60,21 +59,26 @@ class VerificationSearchHandler:
 
         # If an auxiliary response exists, verify it
         if auxiliary_response:
-            print(' >> detected auxiliary response.') # debugging
+            # print(' >> detected auxiliary response.') # debugging
             return self.verify_auxiliary_response(user_query, auxiliary_response, tavily_text, serper_text, all_sources, aux_source)
 
         # Otherwise, generate a combined answer
         verification_prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are an assistant that combines and validates search results from a user query, and returns a combined answer. \
-                        Compare the responses from two separate web searches. Your task is to combine the information \
-                        from both search results based on the user query, and return a concise and complete 1-2 sentence answer. \
-                        ONLY provide a DIRECT answer the query. For example, if the user asks for a list of companies, MAKE SURE to include specific companies in your response. \
-                        Extract the source names IN PROPER FORMAT from the sources gathered through both sets of search results \
-                        (e.g., https://gbtimes.com/ → GB Times, https://businessinsider.com/ → Business Insider, 'Sfstandard → SF Standard) \
-                        and ONLY include those source names in parentheses at the end of your combined response like this: \
-                        (e.g. [Your answer here] (Source: Tesla Official Website, Yahoo Finance))."),
+            ("system", "You are an assistant that synthesizes and validates search results for a user query. \
+                        Given two separate web searches, your task is to produce a DIRECT, concise (one sentence) \
+                        answer that combines the key information from both results. Follow these rules: \
+                        1. Your answer must address the query directly without additional commentary. \
+                        2. If the query requests a list (e.g., companies), include specific, concrete examples. \
+                        3. At the end of your answer, append the source names in the following format: (Source: Source1, Source2, ..., Source n) for ALL relevant sources. \
+                        4. Format each source as a **separate clickable hyperlink** using ANSI escape sequences, ensuring that links are correctly separated. \
+                        Use this structure for each source: '\033]8;;<source_url>\033\\<source_name>\033]8;;\033\\' \
+                        When listing multiple sources, separate them with `, ` (a comma and a space), ensuring **NO ANSI escape characters touch each other**. \
+                        Example: (Source: \033]8;;https://businessinsider.com/\033\\Business Insider\033]8;;\033\\, \
+                                          \033]8;;https://reuters.com/\033\\Reuters\033]8;;\033\\). \
+                        5. If the two sources conflict, rely on the Second search. \
+                        Provide ONLY the final answer in the specified format."),
             ("user", "User Query: {query}\\nFirst search: {tavily_text}\\nSecond search: {serper_text}\\nSources: {all_sources}")
-        ])
+        ]) 
 
         formatted_prompt = verification_prompt.format_messages(
             query=user_query, 
@@ -84,35 +88,6 @@ class VerificationSearchHandler:
         )
 
         return self.model.invoke(formatted_prompt).content.strip()
-
-    @staticmethod
-    def extract_source_names(source_list):
-        """Extracts domain names from URLs to make readable source names."""
-        source_names = []
-        
-        for url in source_list:
-            extracted = tldextract.extract(url)
-            source_name = extracted.domain                                             # Extract only the domain part
-            formatted_source = source_name.capitalize()                                # Capitalize first letter for readability
-            source_names.append(formatted_source)
-        
-        return source_names
-
-    @staticmethod
-    def format_sources(text):
-        """Replaces URLs with extracted source names inside the parentheses at the end of the sentence."""
-        match = re.search(r"\((.*?)\)\s*$", text)
-        
-        if match:
-            sources = match.group(1).split(", ")                                        # Split sources
-            formatted_sources = VerificationSearchHandler.extract_source_names(sources)  # Convert URLs to readable names
-            new_source_text = f"(Source: {', '.join(formatted_sources)})"
-
-            formatted_text = re.sub(r"\(.*?\)\s*$", new_source_text, text)              # Replace sources in the original text
-            # print(formatted_text)
-            return formatted_text                                                       # Replace sources in the original text
-        
-        return text                                                                     # Return original if no parentheses found
 
     def verify_auxiliary_response(self, query: str, auxiliary_response: str, first_text: str, second_text: str, sources: list, aux_source: str = None):
         """
@@ -140,12 +115,12 @@ class VerificationSearchHandler:
         validation_result = self.model.invoke(formatted_prompt).content.strip().lower()
 
         # For debugging
-        print(' >> Validation result: ', validation_result)
+        # print(' >> Validation result: ', validation_result)
 
         if validation_result == "valid":
-            unique_sources = ", ".join(dict.fromkeys([aux_source] + sources[:5])) # Remove duplicates from sources
-            response = f"{auxiliary_response} ({unique_sources})"
-            formatted_response = VerificationSearchHandler.format_sources(response)
+            all_sources = ", ".join([aux_source] + sources[:5])                           # Add the auxiliary source (Wikipedia or Yahoo Finance) 
+            response = f"{auxiliary_response[:-1]} ({all_sources})"                       # Add sources to the end of the response, before the period
+            formatted_response = format_sources(response)                                 # Format the sources for readability
             return formatted_response
         else:
-            return self.combined_search(query)  # Generate a new response if Wikipedia is invalid
+            return self.combined_search(query)                                            # Generate a new response if Wikipedia is invalid

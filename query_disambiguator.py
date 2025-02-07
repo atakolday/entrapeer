@@ -15,15 +15,16 @@ class QueryDisambiguator:
     def detect_ambiguity(self, user_input: str):
         """Detects if a user query is ambiguous and requires clarification."""
         prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are an assistant that detects ambiguity in queries, asking something about a COMPANY. \
-                        Your task is to determine if that query has multiple interpretations. \
-                        ONLY detect ambiguity in the following scenarios: \
-                        - If multiple companies exist with the name in the query. However, pass this check if the company is a well-known global corporation (e.g., Sequoia Capital, Apple, Tesla, Amazon). \
-                        - If the query mentions a company name, but does not specify what SPECIFIC aspect of the company they wish to know. \
-                        - If the query's intent has multiple interpretations (location --> headquarters, or any other relevant location associated with the company's business). \
-                        If ambiguity exists, provide a clarification question. \
-                        Respond in strict JSON format: \
-                        {{\"ambiguous\": true/false, \"follow_up\": Clarification question if needed}}"),
+            ("system", "You are an assistant whose sole task is to determine whether a company-related query is ambiguous. Follow these steps strictly: \
+                        1. Identify the company name mentioned in the query. \
+                        2. Check if this company name could refer to more than one business entity. If so, it is ambiguous. Example: 'Midas' could refer to 'Midas Investments' or 'Midas Automotive Service'. \
+                        3. Determine if the query is vague about what aspect of the company is being asked (e.g., location, business model, history, etc.). \
+                        4. If any of these conditions are met, the query is ambiguous. Otherwise, it is not. \
+                        \
+                        If ambiguous, output exactly in JSON format: \
+                        {{\"ambiguous\": true, \"follow_up\": \"Clarification question\"}}. \
+                        If not ambiguous, output exactly: \
+                        {{\"ambiguous\": false, \"follow_up\": null}}"),
             ("user", "Query: {user_input}")
         ])
         formatted_prompt = prompt.format(user_input=user_input)
@@ -55,14 +56,13 @@ class QueryDisambiguator:
     def extract_company_and_intent(self, user_query: str):
         """Extracts company name and intent from a user query using LLM."""
         extraction_prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are an assistant that extracts structured information from user queries. \
-                        Identify the full company name (e.g., 'Sequoia' → 'Sequoia Capital', 'Google' → 'Alphabet, Inc.'), \
-                        user intent (general information, location, business model, investments, stock, news, products, history, etc.), \
-                        and any specific details about the user intent (e.g., 'San Francisco store', 'headquarters', 'stock performance'). \
-                        If you can't detect a clear intent, leave it blank. Do not include the user intent in the details, only auxiliary information. \
-                        If an explicit time reference is mentioned, extract it. Otherwise, leave it blank for future use. \
-                        Respond strictly in JSON format: \
-                        {{\"company\": \"\", \"intent\": \"\", \"details\": \"\", \"time_reference\": \"\"}}"),
+            ("system", "You are an assistant that extracts structured information from user queries about companies. Follow these instructions: \
+                        1. Identify the full company name (e.g., 'Sequoia' → 'Sequoia Capital', 'Apple' → 'Apple, Inc.'). \
+                        2. Determine the user's intent from this list: general information, location, business model, investments, stock, news, products, history. \
+                        3. If a specific time, year, or relative time expression (e.g., “recently,” “latest,” “current”) is mentioned, extract it in the 'time_reference' field; otherwise, leave it blank. \
+                        4. For the 'details' field, extract any REMAINING modifier that refines or specifies the main intent (e.g., 'price' in 'stock price', 'headquarters' in 'headquarters location'). Do not repeat the company name or generic phrases. \
+                        Output your answer strictly in JSON format as: \
+                        {{\"company\": \"<company>\", \"intent\": \"<intent>\", \"details\": \"<details>\", \"time_reference\": \"<time_reference>\"}}."),
             ("user", "Query: {user_query}")
         ])
         formatted_messages = extraction_prompt.format_messages(user_query=user_query)
@@ -95,13 +95,14 @@ class QueryDisambiguator:
         self.company = company  # store the company name for future reference
 
         # If no specific time is mentioned, use the current year for "recent" queries
-        if not time_reference and ("recently" in user_query.lower() or "latest" in user_query.lower()):
+        RELATIVE_TIME_WORDS = {"recently", "latest", "current", "today", "this year"}
+        if time_reference and any(word in time_reference.lower() for word in RELATIVE_TIME_WORDS):
             time_reference = str(datetime.datetime.now().year)  # Example: "2025"
             # print(f" ! No time reference found, parsing from datetime (year: {time_reference}).") # --> Debugging
 
         query_map = {
             "general information": f"{company} history and products overview", 
-            "location": f"{company} {details} location", 
+            'location': f'{company} headquarters location'.strip() if details == "" else f'{company} {details} location'.strip(), 
             "business model": f"{company} revenue model",
             "investments": f"{company} investment portfolio {time_reference}",
             "stock": f"{company} stock {details}",
@@ -131,7 +132,7 @@ class QueryDisambiguator:
         
         if detection_response.get("ambiguous", False):
             clarification_question = detection_response.get("follow_up", "Could you clarify?")
-            print(f"\nHmm, I need some clarification. {clarification_question}")
+            print(f"\n >> Hmm, I need some clarification. {clarification_question}")
             user_clarification = input(" >> Your clarification: ")
             refined_query = self.clarify_query(user_query, user_clarification)
         else:

@@ -1,5 +1,6 @@
 import os
 import getpass
+import time
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -40,7 +41,9 @@ if not utils.tracing_is_enabled():
 
 def main(retry=False, user_input=None):
     """Main execution flow for handling user queries dynamically."""
-    model = ChatOpenAI(model="gpt-4o-mini")
+    
+    model = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    
     if not retry:
         user_input = input(" >> So, what would you like to look up today?  ")
     
@@ -50,28 +53,30 @@ def main(retry=False, user_input=None):
     intent = disambiguator.intent     # extracted user intent
     company = disambiguator.company   # extracted company name
     
-    print(f"\n >> Refined Query: {refined_query}\n") # debugging
+    # print(f"\n >> Refined Query: {refined_query}\n") # debugging
     
     # Step 2: Get initial response (Wikipedia, Yahoo Finance)
     if intent == 'stock':
-        print(" >> Searching Yahoo Finance...")
+        # print(" >> Searching Yahoo Finance...")
         first_tool = FinancialQueryHandler(user_query = refined_query)
         first_result = first_tool.analyze_stock(company)
 
         # BREAK: If Yahoo Finance couldn't find the ticker, it returned a tuple, with the second element being its message
         if type(first_result) != str:  
-            print(f"{first_result[1]}")
+            print(f" >> It looks like {first_result[1]}")
             something_else = input(" >> Would you like to search something else? (y/n)  ")
             if something_else.lower() in ['y', 'yes']:
                 return main()
             else:
-                return "Understood! Have a great day!\n"
+                time.sleep(1)
+                return " >> Understood. Have a great day!"
             
         return first_result  # Yahoo Finance response has the most up-to-date information, verification system fails
 
     else:
-        print(" >> Searching Wikipedia...")
+        # print(" >> Searching Wikipedia...")
         first_tool = WikipediaQueryHandler(
+            model = model,
             intent = intent,
             company = company,
             doc_content_chars_max = 5000, 
@@ -81,7 +86,7 @@ def main(retry=False, user_input=None):
     
     # Step 3: Response Evaluation
     evaluation = evaluate_response(refined_query, first_result, model)
-    print(f" >> Evaluation: {evaluation}") # debugging
+    # print(f" >> Evaluation: {evaluation}") # debugging
     if evaluation == 'sufficient':
         verification_handler = VerificationSearchHandler(model)
         
@@ -93,9 +98,9 @@ def main(retry=False, user_input=None):
         )
 
     else:
-        print(f" >> Hmm, {first_tool.name} didn't have enough information.") # first_tool.name will print either Yahoo Finance or Wikipedia
+        # print(f" >> Hmm, {first_tool.name} didn't have enough information.") # first_tool.name will print either Yahoo Finance or Wikipedia
 
-        print(" >> Searching Tavily and Serper...")
+        # print(" >> Searching Tavily and Serper...")
         verification_handler = VerificationSearchHandler(model)
         verified_result = verification_handler.combined_search(user_query = refined_query) # combined search with Tavily and Serper
         
@@ -111,11 +116,15 @@ if __name__ == "__main__":
     print("""
 Welcome! I am an AI assistant that will help you with your company-related queries.
 I can provide information about a company you want, including:
- - General information (e.g. location, history, products, investment portfolio),
- - Recent news and updates, and
- - Financial information (e.g. stocks, market performance, projections)
+ • General information (e.g. location, history, products, investment portfolio)
+ • Financial information (e.g. stocks, market performance, projections)
+ • Recent news and updates
+          
+After I answer your question, I will cite my sources as hyperlinks so that you can check for more details. 
+ • If your terminal supports it, you can click on the links to access the sources directly.
+ • If not, you can copy and paste the links into your browser to access the sources.
 
-Start by asking me a question involving a company, and I'll do my best to help you out!
+Start by asking me a question about a company, and I'll do my best to help you out!
 """)
 
     final_result = main()
