@@ -46,14 +46,14 @@ class WikipediaQueryHandler:
                 # conduct lazy_load search if the company name is insufficient
                 wiki_generator = self.search_wikipedia(intent=None, search_query=question) 
 
-        try:
-            while True:
+        while True:
+            try:
                 context = next(wiki_generator)  # Get next result from generator
                 response = self.chain.invoke({"question": question, "context": context}).strip()
                 
                 if not response.startswith("The context provided does not mention"):
-                    # print(f" - Wikipedia Response (context=lazy_load): {response}")
-                    return response  # Return the first valid response
-        except StopIteration:
-            return f"No relevant Wikipedia data found for {question}."
+                    return response  # Return the first response that includes the query answer
+                
+            except StopIteration:
+                return f"No relevant Wikipedia data found for {question}."
             
