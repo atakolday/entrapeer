@@ -94,7 +94,7 @@ def main(retry=False, user_input=None):
         verified_result = verification_handler.combined_search(
             user_query = refined_query,
             auxiliary_response = first_result,
-            aux_source=first_tool.name
+            aux_source=first_tool.url
         )
 
     else:

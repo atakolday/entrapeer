@@ -12,6 +12,8 @@ class WikipediaQueryHandler:
         self.wiki = WikipediaAPIWrapper(**kwargs)
         self.model = model
         self.name = "Wikipedia"  # For debugging purposes
+
+        self.url = "https://en.wikipedia.org/wiki/"
         self.company = company
         self.intent = intent
 
@@ -39,12 +41,14 @@ class WikipediaQueryHandler:
         if type(wiki_generator) == str: # If the generator returns a string, it's a summary
             context = wiki_generator
             response = self.chain.invoke({"question": question, "context": context}).strip()
+            
+            # If query answer is found in the summary, return the LLM response
             if not response.startswith("The context provided does not mention"):
-                # print(f" - Wikipedia Response (context=summary): {response}")
-                return response
-            else:
-                # conduct lazy_load search if the company name is insufficient
-                wiki_generator = self.search_wikipedia(intent=None, search_query=question) 
+                self.url += self.company.replace(" ", "_")  # Append company name to Wikipedia URL
+                return response  
+
+            # Otherwise, conduct lazy_load search 
+            wiki_generator = self.search_wikipedia(intent=None, search_query=question) 
 
         while True:
             try:
@@ -52,6 +56,7 @@ class WikipediaQueryHandler:
                 response = self.chain.invoke({"question": question, "context": context}).strip()
                 
                 if not response.startswith("The context provided does not mention"):
+                    self.url += context.metadata['title'].replace(" ", "_")  # Append page title to Wikipedia URL
                     return response  # Return the first response that includes the query answer
                 
             except StopIteration:
