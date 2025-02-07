@@ -31,7 +31,7 @@ def evaluate_response(user_query: str, retrieved_response: str, model=ChatOpenAI
     if evaluation_result in ["sufficient", "irrelevant", "incomplete"]:
         return evaluation_result
     else:
-        print(" > Unexpected evaluation output:", evaluation_result)
+        # print(" > Unexpected evaluation output:", evaluation_result)  # DEBUG
         return "incomplete"  # Default to insufficient if response is unclear
     
 def hyperlink(url, text):
@@ -66,7 +66,7 @@ def format_sources(text, ticker=None):
     Otherwise, finds a list of source URLs inside parentheses at the end of `text` and replaces them with
     hyperlinked, formatted source names.
     """
-    match = re.search(r"\((.*?)\)\s*$", text)
+    match = re.search(r"\(([^)]+)\)\.?\s*$", text)
 
     if match:
         hyperlinks = []
@@ -91,7 +91,7 @@ def format_sources(text, ticker=None):
                     hyperlinks.append(hyperlink(url, name))
                 
         new_source_text = f"(Source: {', '.join(hyperlinks)})."
-        formatted_text = re.sub(r"\([^()]*\)\s*$", lambda m: new_source_text, text)
+        formatted_text = re.sub(r"\([^()]*\)\.?\s*$", lambda m: new_source_text, text)
         # print(" - Text with formatted sources: ", formatted_text) # DEBUG
         return formatted_text
 
