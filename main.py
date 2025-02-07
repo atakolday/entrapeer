@@ -121,8 +121,9 @@ I can provide information about a company you want, including:
  • Recent news and updates
           
 After I answer your question, I will cite my sources as hyperlinks so that you can check for more details. 
- • If your terminal supports it, you can click on the links to access the sources directly.
- • If not, you can copy and paste the links into your browser to access the sources.
+ • On Mac: Press \033[1mCommand (⌘) + Click\033[0m on a link to open it in your browser.
+ • On Windows (PowerShell, Windows Terminal): Press \033[1mCtrl + Click\033[0m to access the source directly.
+ • On Windows Command Prompt (cmd.exe): Hyperlinks are not supported, so please \033[1mcopy and paste\033[0m the link into your browser.
 
 Start by asking me a question about a company, and I'll do my best to help you out!
 """)
