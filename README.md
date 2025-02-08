@@ -14,10 +14,17 @@ The main workflow is implemented in `main.py`, which coordinates the processing 
 .
 ├── main.py                         # Entry point of the application
 ├── query_disambiguator.py          # Handles query disambiguation, classification, and refinement
-├── verification_search_handler.py  # Manages web-based and verification-related searches through Tavily and Google Serper API
-├── financial_query_handler.py      # Handles finance-related queries through Yahoo Finance API
+├── verification_search_handler.py   # Manages web-based and verification-related searches through Tavily and Google Serper API
+├── financial_query_handler.py       # Handles finance-related queries through Yahoo Finance API
 ├── wikipedia_query_handler.py      # Handles query search through Wikipedia API
 ├── utils.py                        # Utility functions used throughout the project (expandable)
+├── unittests/                      # Folder containing all unit tests
+│   ├── test_utils.py
+│   ├── test_financial_query_handler.py
+│   ├── test_query_disambiguator.py
+│   ├── test_verification_search_handler.py
+│   ├── test_wikipedia_query_handler.py
+├── Dockerfile                       # Docker configuration for containerized deployment
 ```
 
 ## End-to-End Execution Flow
@@ -42,7 +49,7 @@ The main workflow is implemented in `main.py`, which coordinates the processing 
       - At this point, the application takes the already refined input as the raw user input and asks for any additional details from the user.
       - The query is **not** mapped to a predetermined value this time, it is passed along as `{company_name} {details} {time_reference}`.
 
-## Installation
+## 🔧 Local Installation
 
 ### Prerequisites
 - Python 3.8 or later
@@ -51,22 +58,28 @@ The main workflow is implemented in `main.py`, which coordinates the processing 
 ### Setup
 1. Clone the repository:
    ```sh
-   git clone <repo_url>
-   cd <repo_name>
+   git clone https://github.com/atakolday/entrapeer.git
+   cd entrapeer
    ```
-2. Install dependencies:
+2. Set up virtual environment:
+   
+   Using Python virtual environment (`venv`)
+   ```sh
+   python -m venv venv
+   source venv/bin/activate  # On macOS/Linux
+   venv\Scripts\activate     # On Windows
+   ```
+   Using Conda environment
+   ```sh
+   conda create --name entrapeer-env python=3.12
+   conda activate entrapeer-env  
+   ```
+3. Install dependencies:
    ```sh
    pip install -r requirements.txt
    ```
 
-## Usage
-
-Run the main script to start processing queries:
-```sh
-python main.py
-```
-
-## Storing API Keys
+### Storing API Keys
 To use this application, you will need 4 API keys:
 - `LangChain API`: to manage LangSmith integration and query tracing
 - `OpenAI API`: to handle LLM requests within LangChain
@@ -103,6 +116,52 @@ Since API kets should not be hardcoded or pushed to version control, users have 
   os.environ["SERPER_API_KEY"] = get_key("SERPER_API_KEY", "Serper API Key")
   ```
 
+### Usage
+
+Run the main script to start processing queries:
+```sh
+python main.py
+```
+---
+
+## 🐳 Running with Docker
+
+This project supports containerized execution via Docker.
+
+### Build the Docker Image
+```sh
+docker build -t entrapeer-app .
+```
+
+### Run the Container (Interactive Mode)
+
+To run the app with interactive input, use:
+
+```sh
+docker run --rm -it --env-file .env entrapeer-app
+```
+
+### Running Tests Inside Docker (Optional)
+
+If you want to run tests inside the container, you can execute:
+
+```sh
+docker run --rm -it entrapeer-app python -m unittest discover unittests
+```
+
+### Stop & Clean Up Docker Containers
+
+```sh
+docker ps -a           # List running containers
+docker stop <ID>       # Stop a specific container
+docker system prune -a # Remove unused containers and images
+```
+
+## 🧪 Running Unit Tests
+All unit tests are located in the `unittests/` folder. Run them using:
+```sh
+python -m unittest discover unittests
+```
 ### Components
 
 #### `main.py`
@@ -136,6 +195,3 @@ Since API kets should not be hardcoded or pushed to version control, users have 
 - `hyperlink`: Creates hyperlinks with source URL, using ASCII escape sequences for the sources listed at the end of the system response.
 - `extract_source_names`: Extracts domain names from URLs and returns a list of (formatted_source, url) tuples.
 - `format_sources`: If there is a ticker, returns the hyperlinked Yahoo Finance URL. Otherwise, finds a list of source URLs inside parentheses at the end of the given text and replaces them with hyperlinked, formatted source names.
-
-## License
-This project is licensed under the MIT License. See `LICENSE` for more details.
