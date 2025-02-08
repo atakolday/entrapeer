@@ -1,6 +1,7 @@
 import os
 import getpass
 import time
+import sys
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -113,7 +114,9 @@ def main(retry=False, user_input=None):
 
 
 if __name__ == "__main__":
-    print("""
+    # Check if running interactively
+    if sys.stdin.isatty():  
+        print("""
 Welcome! I am an AI assistant that will help you with your company-related queries.
 I can provide information about a company you want, including:
  • General information (e.g. location, history, products, investment portfolio)
@@ -127,6 +130,13 @@ After I answer your question, I will cite my sources as hyperlinks so that you c
 
 Start by asking me a question about a company, and I'll do my best to help you out!
 """)
-
-    final_result = main()
-    print(f"\n{final_result}\n")
+        final_result = main()
+        print(f"\n{final_result}\n")
+    
+    else:
+        # Exit if not interactive
+        time.sleep(1)
+        print("\n >> Hey there! This program requires user input. You should run the container with `-it` flag.\n")  
+        time.sleep(1)
+        sys.exit(1)
+   
