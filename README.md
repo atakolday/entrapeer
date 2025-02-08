@@ -8,14 +8,14 @@
 
 The main workflow is implemented in `main.py`, which coordinates the processing and resolution of incoming queries.
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 .
 ├── main.py                         # Entry point of the application
 ├── query_disambiguator.py          # Handles query disambiguation, classification, and refinement
-├── verification_search_handler.py   # Manages web-based and verification-related searches through Tavily and Google Serper API
-├── financial_query_handler.py       # Handles finance-related queries through Yahoo Finance API
+├── verification_search_handler.py  # Manages web-based and verification-related searches through Tavily and Google Serper API
+├── financial_query_handler.py      # Handles finance-related queries through Yahoo Finance API
 ├── wikipedia_query_handler.py      # Handles query search through Wikipedia API
 ├── utils.py                        # Utility functions used throughout the project (expandable)
 ├── unittests/                      # Folder containing all unit tests
@@ -24,10 +24,10 @@ The main workflow is implemented in `main.py`, which coordinates the processing 
 │   ├── test_query_disambiguator.py
 │   ├── test_verification_search_handler.py
 │   ├── test_wikipedia_query_handler.py
-├── Dockerfile                       # Docker configuration for containerized deployment
+├── Dockerfile                      # Docker configuration for containerized deployment
 ```
 
-## End-to-End Execution Flow
+## 🚀 End-to-End Execution Flow
 1. `main.py` receives a query through user input.
 2. The query is passed to `query_disambiguator.py` for refinement and classification.
 3. Based on classification, the query is routed to the appropriate handler:
@@ -162,7 +162,7 @@ All unit tests are located in the `unittests/` folder. Run them using:
 ```sh
 python -m unittest discover unittests
 ```
-### Components
+## 🧩 Components
 
 #### `main.py`
 - The central orchestrator of the query processing system.
