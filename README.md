@@ -21,7 +21,7 @@ You can view the executed sample query's LangSmith trace here: [Link](https://sm
 
 #### LangGraph App Execution Flow
 
-![LangGraph agents graph](../static/graph_structure.png)
+![LangGraph agents graph](https://github.com/atakolday/entrapeer/blob/main/static/graph_structure.png)
 ---
 
 ## 📂 Project Structure
