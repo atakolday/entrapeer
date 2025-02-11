@@ -8,6 +8,22 @@
 
 The main workflow is implemented in `main.py`, which coordinates the processing and resolution of incoming queries.
 
+---
+### ⚠️ LangGraph Note
+
+You may find a LangGraph integration of this application in `graph/`, which contains all the necessary code for the application to run on LangGraph. However, some features (e.g. Dockerfile, unittests) are not present yet.
+
+You can still run the app using `graph/main.py` after following the local installation steps here: [🔧 Local Installation](#local-installation).
+
+The resulting agent will receive a LangSmith trace of all the executed steps.
+
+You can view the executed sample query's LangSmith trace here: [Link](https://smith.langchain.com/public/da6fa2b2-ee84-46be-9961-b2a21bb46117/r)
+
+#### LangGraph App Execution Flow
+
+![LangGraph agents graph](../static/graph_structure.png)
+---
+
 ## 📂 Project Structure
 
 ```
@@ -25,6 +41,13 @@ The main workflow is implemented in `main.py`, which coordinates the processing 
 │   ├── test_verification_search_handler.py
 │   ├── test_wikipedia_query_handler.py
 ├── Dockerfile                      # Docker configuration for containerized deployment
+├── graph/                          # [In progress] LangGraph integration
+│   ├── base_models.py              # The base model structures used with structured agent output
+│   ├── agents.py                   # The state structure and all agents used in the main execution flow
+│   ├── tools.py                    # Contains all search tools (Wikipedia, Google Serper, Tavily)
+│   ├── utils.py                    # Some utility functions
+│   ├── main.py                     # Main LangGraph execution flow
+├── static/                         # Miscellaneous
 ```
 
 ## 🚀 End-to-End Execution Flow
@@ -62,7 +85,7 @@ The main workflow is implemented in `main.py`, which coordinates the processing 
    cd entrapeer
    ```
 2. Set up virtual environment:
-   
+
    Using Python virtual environment (`venv`)
    ```sh
    python -m venv venv
