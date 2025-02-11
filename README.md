@@ -13,15 +13,13 @@ The main workflow is implemented in `main.py`, which coordinates the processing 
 
 You may find a LangGraph integration of this application in `graph/`, which contains all the necessary code for the application to run on LangGraph. However, some features (e.g. Dockerfile, unittests) are not present yet.
 
-You can still run the app using `graph/main.py` after following the local installation steps here: [🔧 Local Installation](#local-installation).
+- You can still run the app using `graph/main.py` after following the local installation steps here: [🔧 Local Installation](#local-installation).
+- The resulting agent will receive a LangSmith trace of all the executed steps.
+- You can view the executed sample query's LangSmith trace here: [Link](https://smith.langchain.com/public/da6fa2b2-ee84-46be-9961-b2a21bb46117/r)
+- **LangGraph App Execution Flow:**
 
-The resulting agent will receive a LangSmith trace of all the executed steps.
-
-You can view the executed sample query's LangSmith trace here: [Link](https://smith.langchain.com/public/da6fa2b2-ee84-46be-9961-b2a21bb46117/r)
-
-#### LangGraph App Execution Flow
-
-![LangGraph agents graph](https://github.com/atakolday/entrapeer/blob/main/static/graph_structure.png)
+  ![LangGraph agents graph](https://github.com/atakolday/entrapeer/blob/main/static/graph_structure.png)
+  
 ---
 
 ## 📂 Project Structure
