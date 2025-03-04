@@ -1,7 +1,7 @@
 openai==1.61.0
 python-dotenv==1.0.1
 wikipedia==1.4.0
-yfinance==0.2.52
+yfinance==0.2.54
 langchain==0.3.17
 langchain-community==0.3.16
 langchain-core==0.3.33
